@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>资源工作台 — 晗歌 | 案例与媒体管理</title>
+<meta name="description" content="晗歌个人网站资源管理工作台 — 管理案例、图片、视频等媒体资产。" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+<style>
+:root { --accent-green: #00C9A7; }
+.workspace-dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.w-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 28px; backdrop-filter: blur(16px); }
+.w-card h3 { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.drop-zone { border: 2px dashed var(--glass-border); border-radius: var(--radius-sm); padding: 40px 20px; text-align: center; transition: all 0.3s; cursor: pointer; }
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: rgba(184,134,44,0.05); }
+.drop-zone .icon { font-size: 40px; margin-bottom: 12px; display: block; }
+.drop-zone p { color: var(--text-muted); font-size: 14px; }
+.drop-zone .hint { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+.case-form label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; margin-top: 16px; }
+.case-form label:first-child { margin-top: 0; }
+.case-form input, .case-form textarea, .case-form select {
+  width: 100%; padding: 10px 14px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border);
+  color: var(--text); font-size: 14px; font-family: var(--font-sans);
+  transition: border-color 0.3s; resize: vertical;
+}
+.case-form input:focus, .case-form textarea:focus, .case-form select:focus { outline: none; border-color: var(--accent); }
+.case-form textarea { min-height: 80px; }
+.case-form .btn-sm { padding: 8px 20px; font-size: 13px; margin-top: 16px; }
+.asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; margin-top: 16px; }
+.asset-item { position: relative; aspect-ratio: 1; border-radius: var(--radius-sm); overflow: hidden; background: var(--glass); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; transition: all 0.3s; }
+.asset-item:hover { border-color: var(--accent); transform: scale(1.05); }
+.asset-item .del { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,0,0,0.6); color: #fff; border: none; font-size: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; line-height: 1; }
+.asset-item:hover .del { display: flex; }
+.asset-item img { width: 100%; height: 100%; object-fit: cover; }
+.asset-item .name { position: absolute; bottom: 0; left: 0; right: 0; font-size: 9px; color: var(--text-dim); background: rgba(0,0,0,0.6); padding: 2px 4px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.manifest-list { max-height: 300px; overflow-y: auto; }
+.manifest-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+.manifest-item:last-child { border-bottom: none; }
+.manifest-item .title { color: var(--text); }
+.manifest-item .meta { color: var(--text-dim); font-size: 12px; }
+.manifest-item .actions { display: flex; gap: 8px; }
+.manifest-item .actions button { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 12px; padding: 2px 8px; border-radius: 4px; }
+.manifest-item .actions button:hover { background: rgba(184,134,44,0.1); }
+.manifest-item .actions button.del { color: #ff4444; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 50px; font-size: 11px; background: rgba(184,134,44,0.12); color: var(--accent); }
+.badge.green { background: rgba(0,201,167,0.12); color: var(--accent-green); }
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #0a0e1a; padding: 10px 24px; border-radius: 50px; font-size: 14px; font-weight: 600; opacity: 0; transition: opacity 0.3s; z-index: 200; }
+.toast.show { opacity: 1; }
+.tabs { display: flex; gap: 4px; margin-bottom: 24px; }
+.tab-btn { padding: 8px 20px; border-radius: 50px; font-size: 13px; background: transparent; border: 1px solid var(--glass-border); color: var(--text-muted); cursor: pointer; transition: all 0.3s; font-family: var(--font-sans); }
+.tab-btn:hover { border-color: var(--accent); color: var(--text); }
+.tab-btn.active { background: var(--accent); color: #0a0e1a; border-color: var(--accent); font-weight: 600; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.stats-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.stat-box { flex: 1; min-width: 120px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 16px; text-align: center; }
+.stat-box .number { font-size: 28px; font-weight: 700; color: #fff; }
+.stat-box .label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+@media (max-width: 768px) { .workspace-dashboard { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="bg-gradient"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav scrolled" role="navigation" aria-label="主导航">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">晗歌</a>
+    <div class="nav-links">
+      <a href="/">首页</a>
+      <a href="story.html">故事</a>
+      <a href="projects.html">案例</a>
+      <a href="insights.html">洞察</a>
+      <a href="workspace.html" class="active">资源台</a>
+      <a href="contact.html">联系</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-hero" style="padding-bottom: 20px;">
+    <div class="hero-badge" style="animation: fadeUp 1s ease 0.2s both;">&#x1f4e6; 资源工作台</div>
+    <h1>案例与媒体管理</h1>
+    <p>上传图片、视频、管理项目案例，所有资产存储在本地浏览器中，导出后可同步至网站代码仓库。</p>
+  </div>
+
+  <section class="section visible" style="padding-top: 0;">
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard" role="tab">&#x1f4ca; 总览</button>
+      <button class="tab-btn" data-tab="cases" role="tab">&#x1f4bc; 案例管理</button>
+      <button class="tab-btn" data-tab="media" role="tab">&#x1f5bc;&#xfe0f; 媒体库</button>
+      <button class="tab-btn" data-tab="export" role="tab">&#x1f4e5; 导出同步</button>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div class="tab-content active" id="tab-dashboard">
+      <div class="stats-row" id="stats-panel">
+        <div class="stat-box"><div class="number" id="stat-cases">0</div><div class="label">案例数</div></div>
+        <div class="stat-box"><div class="number" id="stat-media">0</div><div class="label">媒体文件</div></div>
+        <div class="stat-box"><div class="number" id="stat-tags">0</div><div class="label">标签数</div></div>
+        <div class="stat-box"><div class="number" id="stat-version">1</div><div class="label">版本号</div></div>
+      </div>
+      <div class="workspace-dashboard">
+        <div class="w-card">
+          <h3>&#x1f4dd; 快速操作</h3>
+          <p style="font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 16px;">
+            使用 <strong>案例管理</strong> 添加新的项目案例，<br />
+            使用 <strong>媒体库</strong> 上传图片/视频资产，<br />
+            使用 <strong>导出同步</strong> 生成站点数据文件。
+          </p>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-primary btn-sm" onclick="switchTab('cases')">&#x2795; 新增案例</button>
+            <button class="btn btn-outline btn-sm" onclick="switchTab('media')">&#x1f5bc;&#xfe0f; 上传媒体</button>
+          </div>
+        </div>
+        <div class="w-card">
+          <h3>&#x1f4cb; 同步提示</h3>
+          <p style="font-size: 14px; color: var(--text-muted); line-height: 1.7;">
+            当前工作台数据存储在浏览器本地 (localStorage)。<br /><br />
+            <strong>更新流程：</strong><br />
+            1. 在"案例管理"中添加/编辑案例<br />
+            2. 在"媒体库"中上传附件<br />
+            3. 进入"导出同步"导出 data.json<br />
+            4. 将 data.json 提交到网站仓库 + 同步飞书文档<br />
+            5. 网站自动更新
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cases Tab -->
+    <div class="tab-content" id="tab-cases">
+      <div class="workspace-dashboard">
+        <div class="w-card">
+          <h3>&#x2795; 新建 / 编辑案例</h3>
+          <form class="case-form" id="case-form">
+            <input type="hidden" id="case-id" value="" />
+            <label>案例标题</label>
+            <input type="text" id="case-title" placeholder="如：某高端城市综合体项目" />
+            <label>分类标签</label>
+            <select id="case-tag">
+              <option value="城市综合体">城市综合体</option>
+              <option value="文旅地产">文旅地产</option>
+              <option value="AI数字化">AI数字化</option>
+              <option value="企业培训">企业培训</option>
+              <option value="商业地产">商业地产</option>
+              <option value="住宅项目">住宅项目</option>
+            </select>
+            <label>案例描述</label>
+            <textarea id="case-desc" placeholder="描述案例背景、你的角色、核心成果..."></textarea>
+            <label>关键成果（加粗显示）</label>
+            <input type="text" id="case-result" placeholder="如：首期去化率达85%，销售额突破30亿元" />
+            <label>关联媒体（从媒体库选择）</label>
+            <select id="case-media"><option value="">无</option></select>
+            <button type="submit" class="btn btn-primary btn-sm">&#x1f4be; 保存案例</button>
+          </form>
+        </div>
+        <div class="w-card">
+          <h3>&#x1f4cb; 已有案例</h3>
+          <div class="manifest-list" id="case-list">
+            <p style="color: var(--text-dim); font-size: 13px;">尚无案例，请添加</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Media Tab -->
+    <div class="tab-content" id="tab-media">
+      <div class="workspace-dashboard">
+        <div class="w-card">
+          <h3>&#x1f4e5; 上传媒体文件</h3>
+          <div class="drop-zone" id="drop-zone">
+            <span class="icon">&#x1f4c2;</span>
+            <p>拖拽文件到此处，或点击选择</p>
+            <span class="hint">支持 JPG / PNG / WebP / MP4 / PDF，单文件最大 10MB</span>
+            <input type="file" id="file-input" accept="image/*,video/mp4,application/pdf" multiple style="display:none" />
+          </div>
+        </div>
+        <div class="w-card">
+          <h3>&#x1f5bc;&#xfe0f; 媒体库 <span id="media-count" class="badge">0</span></h3>
+          <div class="asset-grid" id="media-grid">
+            <p style="color: var(--text-dim); font-size: 13px; grid-column: 1 / -1;">暂无媒体文件，请上传</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Tab -->
+    <div class="tab-content" id="tab-export">
+      <div class="workspace-dashboard">
+        <div class="w-card">
+          <h3>&#x1f4e5; 导出数据</h3>
+          <p style="font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 16px;">
+            导出的 JSON 文件包含所有案例和媒体资产清单。<br />
+            将此文件放入网站项目的 <code>src/data/</code> 目录即可同步。
+          </p>
+          <button class="btn btn-primary" onclick="exportData()">&#x1f4e5; 导出 data.json</button>
+          <button class="btn btn-outline" onclick="clearAll()" style="margin-left: 12px;">&#x1f5d1; 清空所有数据</button>
+        </div>
+        <div class="w-card">
+          <h3>&#x1f504; 同步指引</h3>
+          <div style="font-size: 14px; color: var(--text-muted); line-height: 2;">
+            <p><strong>1.</strong> 导出 data.json &#x2192; 放入网站项目</p>
+            <p><strong>2.</strong> 提交 Git &#x2192; 自动触发部署</p>
+            <p><strong>3.</strong> 访问网站验证更新</p>
+            <p><strong>4.</strong> 回到此页面继续管理</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+<script>
+// Tab switching
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + name));
+}
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+// Toast
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Data Store
+const STORE_KEY = 'jackyhan_workspace';
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || { cases: [], media: [], version: 1 }; }
+  catch { return { cases: [], media: [], version: 1 }; }
+}
+function saveData(data) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(data));
+}
+
+// File upload
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+function handleFiles(files) {
+  const data = loadData();
+  for (const file of files) {
+    if (file.size > 10 * 1024 * 1024) { showToast('文件过大: ' + file.name); continue; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      data.media.push({
+        id: 'm' + Date.now() + Math.random().toString(36).slice(2,6),
+        name: file.name,
+        type: file.type.startsWith('image') ? 'image' : file.type.startsWith('video') ? 'video' : 'document',
+        data: e.target.result,
+        date: new Date().toISOString().slice(0, 10)
+      });
+      saveData(data);
+      renderMedia();
+      renderStats();
+      updateCaseMediaSelect();
+      showToast('已上传: ' + file.name);
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// Render media
+function renderMedia() {
+  const data = loadData();
+  const grid = document.getElementById('media-grid');
+  document.getElementById('media-count').textContent = data.media.length;
+  if (data.media.length === 0) {
+    grid.innerHTML = '<p style="color: var(--text-dim); font-size: 13px; grid-column: 1 / -1;">暂无媒体文件，请上传</p>';
+    return;
+  }
+  grid.innerHTML = data.media.map(m => {
+    const icon = m.type === 'image' ? '&#x1f5bc;' : m.type === 'video' ? '&#x1f3ac;' : '&#x1f4c4;';
+    const thumb = m.type === 'image' ? `<img src="${m.data}" alt="${m.name}" />` : `<span>${icon}</span>`;
+    return `<div class="asset-item">${thumb}<div class="name">${m.name}</div><button class="del" onclick="delMedia('${m.id}')">x</button></div>`;
+  }).join('');
+}
+
+function delMedia(id) {
+  const data = loadData();
+  data.media = data.media.filter(m => m.id !== id);
+  saveData(data);
+  renderMedia(); renderStats(); updateCaseMediaSelect();
+  showToast('已删除媒体');
+}
+
+// Case management
+const caseForm = document.getElementById('case-form');
+caseForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const data = loadData();
+  const id = document.getElementById('case-id').value;
+  const entry = {
+    title: document.getElementById('case-title').value.trim(),
+    tag: document.getElementById('case-tag').value,
+    desc: document.getElementById('case-desc').value.trim(),
+    result: document.getElementById('case-result').value.trim(),
+    mediaId: document.getElementById('case-media').value,
+    date: new Date().toISOString().slice(0, 10)
+  };
+  if (!entry.title) { showToast('请填写案例标题'); return; }
+  if (id) {
+    const idx = data.cases.findIndex(c => c.id === id);
+    if (idx >= 0) { entry.id = id; data.cases[idx] = entry; }
+    showToast('案例已更新');
+  } else {
+    entry.id = 'c' + Date.now();
+    data.cases.push(entry);
+    showToast('案例已添加');
+  }
+  saveData(data);
+  caseForm.reset();
+  document.getElementById('case-id').value = '';
+  renderCases(); renderStats();
+});
+
+function editCase(id) {
+  const data = loadData();
+  const c = data.cases.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('case-id').value = c.id;
+  document.getElementById('case-title').value = c.title;
+  document.getElementById('case-tag').value = c.tag;
+  document.getElementById('case-desc').value = c.desc;
+  document.getElementById('case-result').value = c.result || '';
+  document.getElementById('case-media').value = c.mediaId || '';
+  switchTab('cases');
+}
+
+function delCase(id) {
+  const data = loadData();
+  data.cases = data.cases.filter(c => c.id !== id);
+  saveData(data);
+  renderCases(); renderStats();
+  showToast('案例已删除');
+}
+
+function renderCases() {
+  const data = loadData();
+  const list = document.getElementById('case-list');
+  if (data.cases.length === 0) {
+    list.innerHTML = '<p style="color: var(--text-dim); font-size: 13px;">尚无案例，请添加</p>';
+    return;
+  }
+  list.innerHTML = data.cases.map(c =>
+    `<div class="manifest-item">
+      <div><span class="title">${c.title}</span><br /><span class="meta"><span class="badge">${c.tag}</span> ${c.date}</span></div>
+      <div class="actions">
+        <button onclick="editCase('${c.id}')">&#x270f;</button>
+        <button class="del" onclick="delCase('${c.id}')">&#x1f5d1;</button>
+      </div>
+    </div>`
+  ).join('');
+}
+
+// Media select for case form
+function updateCaseMediaSelect() {
+  const data = loadData();
+  const sel = document.getElementById('case-media');
+  sel.innerHTML = '<option value="">无</option>' + data.media.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+}
+
+// Stats
+function renderStats() {
+  const data = loadData();
+  const tags = new Set(data.cases.map(c => c.tag));
+  document.getElementById('stat-cases').textContent = data.cases.length;
+  document.getElementById('stat-media').textContent = data.media.length;
+  document.getElementById('stat-tags').textContent = tags.size;
+}
+
+// Export
+function exportData() {
+  const data = loadData();
+  const blob = new Blob([JSON.stringify({ cases: data.cases, media: data.media.map(m => ({ id: m.id, name: m.name, type: m.type, date: m.date })), version: data.version, exportedAt: new Date().toISOString() }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'jackyhan-portfolio-data.json'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('已导出 data.json，可放入网站项目使用');
+}
+
+function clearAll() {
+  if (!confirm('确定清空所有本地数据？此操作不可撤销。')) return;
+  localStorage.removeItem(STORE_KEY);
+  renderCases(); renderMedia(); renderStats();
+  showToast('所有数据已清空');
+}
+
+// Init
+renderCases(); renderMedia(); renderStats(); updateCaseMediaSelect();
+</script>
+</body>
+</html>
