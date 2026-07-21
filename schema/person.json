@@ -1,0 +1,45 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "晗歌 (Jacky Han)",
+  "givenName": "晗歌",
+  "alternateName": "Jacky Han",
+  "description": "15年地产全周期操盘经验的行业老兵，世界500强地产企业前高管，AI实战专家与数字化转型落地教练。致力于将AI技术融入传统企业的业务场景，实现降本增效与业务升级。",
+  "image": "/assets/jacky-profile.jpg",
+  "url": "https://jackyhan.com",
+  "sameAs": [
+    "https://linkedin.com/in/jackyhan",
+    "https://github.com/jackyhan",
+    "https://www.zhihu.com/people/jackyhan",
+    "https://mp.weixin.qq.com/"
+  ],
+  "knowsAbout": [
+    "房地产全周期策划",
+    "AI数字化转型",
+    "企业AI落地",
+    "项目策划与定位",
+    "圈层营销",
+    "自动化工作流"
+  ],
+  "alumniOf": {
+    "@type": "CollegeOrUniversity",
+    "name": "市场营销 / 房地产经营管理"
+  },
+  "worksFor": {
+    "@type": "Organization",
+    "name": "世界500强地产集团"
+  },
+  "jobTitle": [
+    "地产全周期操盘专家",
+    "AI数字化转型实践教练",
+    "项目策划拓展总监"
+  ],
+  "hasOccupation": {
+    "@type": "Occupation",
+    "name": "AI数字化转型顾问",
+    "occupationLocation": {
+      "@type": "City",
+      "name": "中国"
+    }
+  }
+}
