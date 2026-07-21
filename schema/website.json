@@ -1,0 +1,13 @@
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "晗歌 | 地产+AI数字化转型实战家",
+  "alternateName": "Jacky Han Official Site",
+  "url": "https://jackyhan.com",
+  "description": "晗歌（Jacky Han）个人官方网站——15年地产全周期操盘经验，AI实战专家与数字化转型落地教练。",
+  "inLanguage": ["zh-CN", "en"],
+  "about": {
+    "@type": "Person",
+    "name": "晗歌 Jacky Han"
+  }
+}
